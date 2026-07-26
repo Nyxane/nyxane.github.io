@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title> · nyxane.dev</title>
+<meta name="description" content=" — software developer working across real-time graphics (OpenGL/GLSL) and the JVM. Renderers, Minecraft modding, and root-cause debugging.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d0e12; --bg2:#0a0b0e;
+    --ink:#ece7dd; --muted:#8c8779; --dim:#5f5b52;
+    --line:rgba(236,231,221,.10); --line2:rgba(236,231,221,.06);
+    --wire:#79d6c2;      /* wireframe mint */
+    --sun:#e5a44f;       /* dawn amber */
+    --panel:rgba(255,255,255,.025);
+    --disp:'Space Grotesk','IBM Plex Sans',sans-serif;
+    --sans:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --mono:'IBM Plex Mono','SFMono-Regular',Menlo,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  ::selection{background:var(--wire);color:#08110f}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px}
+  .mono{font-family:var(--mono)}
+
+  /* ---------- nav ---------- */
+  nav{position:sticky;top:0;z-index:40;backdrop-filter:blur(9px);
+    background:linear-gradient(to bottom,rgba(13,14,18,.92),rgba(13,14,18,.62));
+    border-bottom:1px solid var(--line2)}
+  .nav-in{max-width:1180px;margin:0 auto;padding:15px 32px;display:flex;align-items:center;justify-content:space-between}
+  .brand{font-family:var(--mono);font-weight:600;font-size:14px;letter-spacing:.02em;display:flex;align-items:center;gap:9px}
+  .brand .dot{width:7px;height:7px;border-radius:50%;background:var(--wire);
+    box-shadow:0 0 0 0 rgba(121,214,194,.5);animation:pulse 2.6s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(121,214,194,.45)}70%{box-shadow:0 0 0 7px rgba(121,214,194,0)}100%{box-shadow:0 0 0 0 rgba(121,214,194,0)}}
+  .brand .tld{color:var(--wire)}
+  .nav-links{display:flex;gap:26px;align-items:center;font-family:var(--mono);font-size:12.5px;letter-spacing:.03em}
+  .nav-links a{color:var(--muted);transition:color .2s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links .cta{color:var(--ink);border:1px solid var(--line);padding:7px 14px;border-radius:7px}
+  .nav-links .cta:hover{border-color:var(--wire);color:var(--wire)}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;padding:66px 0 74px;
+    border-bottom:1px solid var(--line2)}
+  .hero::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+    background-image:linear-gradient(var(--line2) 1px,transparent 1px),linear-gradient(90deg,var(--line2) 1px,transparent 1px);
+    background-size:46px 46px;
+    -webkit-mask-image:radial-gradient(120% 90% at 72% 40%,#000 0%,transparent 72%);
+            mask-image:radial-gradient(120% 90% at 72% 40%,#000 0%,transparent 72%);}
+  .hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:1.06fr .94fr;gap:52px;align-items:center}
+
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--wire);margin-bottom:20px}
+  .eyebrow .slash{color:var(--dim)}
+  h1.name{font-family:var(--disp);font-weight:700;font-size:clamp(44px,7vw,76px);line-height:.98;
+    letter-spacing:-.015em;margin-bottom:22px}
+  .thesis{font-family:var(--disp);font-weight:500;font-size:clamp(17px,2.1vw,21px);line-height:1.4;
+    color:var(--ink);max-width:29ch;margin-bottom:16px}
+  .thesis .u{color:var(--sun)}
+  .sub{font-size:15px;color:var(--muted);max-width:44ch;margin-bottom:30px}
+  .actions{display:flex;gap:12px;flex-wrap:wrap}
+  .btn{font-family:var(--mono);font-size:13px;letter-spacing:.02em;padding:12px 20px;border-radius:9px;
+    display:inline-flex;align-items:center;gap:8px;transition:transform .15s,background .2s,border-color .2s,color .2s}
+  .btn.primary{background:var(--wire);color:#08110f;font-weight:600}
+  .btn.primary:hover{transform:translateY(-2px)}
+  .btn.ghost{border:1px solid var(--line);color:var(--ink)}
+  .btn.ghost:hover{border-color:var(--sun);color:var(--sun)}
+
+  /* viewport */
+  .viewport{position:relative;aspect-ratio:1/1;border:1px solid var(--line);border-radius:14px;
+    background:radial-gradient(120% 120% at 50% 30%,rgba(121,214,194,.05),transparent 60%),
+               linear-gradient(160deg,rgba(255,255,255,.02),rgba(0,0,0,.18));
+    overflow:hidden}
+  .viewport canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .hud{position:absolute;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;
+    color:var(--dim);pointer-events:none;text-transform:uppercase}
+  .hud.tl{top:12px;left:14px}
+  .hud.tr{top:12px;right:14px;text-align:right}
+  .hud.bl{bottom:12px;left:14px}
+  .hud.br{bottom:12px;right:14px;text-align:right}
+  .hud .k{color:var(--wire)}
+  .corner{position:absolute;width:14px;height:14px;border-color:var(--line);pointer-events:none}
+  .corner.a{top:8px;left:8px;border-top:1px solid;border-left:1px solid}
+  .corner.b{top:8px;right:8px;border-top:1px solid;border-right:1px solid}
+  .corner.c{bottom:8px;left:8px;border-bottom:1px solid;border-left:1px solid}
+  .corner.d{bottom:8px;right:8px;border-bottom:1px solid;border-right:1px solid}
+
+  /* ---------- sections ---------- */
+  section{padding:78px 0;border-bottom:1px solid var(--line2)}
+  .sec-eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;color:var(--dim);
+    margin-bottom:34px;display:flex;align-items:center;gap:14px}
+  .sec-eyebrow .no{color:var(--wire)}
+  .sec-eyebrow::after{content:"";flex:1;height:1px;background:var(--line2)}
+
+  .lead{font-family:var(--disp);font-weight:500;font-size:clamp(20px,2.6vw,27px);line-height:1.45;
+    letter-spacing:-.01em;max-width:24ch}
+  .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+  .about-body p{color:var(--muted);font-size:15.5px;margin-bottom:16px}
+  .about-body p:last-child{margin-bottom:0}
+  .about-body b{color:var(--ink);font-weight:500}
+
+  /* work cards */
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .card{border:1px solid var(--line);border-radius:14px;padding:26px 26px 24px;background:var(--panel);
+    position:relative;transition:border-color .25s,transform .25s,background .25s}
+  .card:hover{border-color:rgba(121,214,194,.4);transform:translateY(-3px);background:rgba(121,214,194,.03)}
+  .card .idx{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.08em}
+  .card h3{font-family:var(--disp);font-weight:600;font-size:20px;margin:12px 0 4px;line-height:1.2}
+  .card .tag{font-family:var(--mono);font-size:11px;color:var(--sun);letter-spacing:.03em;margin-bottom:14px}
+  .card p{color:var(--muted);font-size:14.5px;margin-bottom:16px}
+  .card .stackline{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.02em}
+  .card .link{font-family:var(--mono);font-size:12px;color:var(--wire);margin-top:14px;display:inline-flex;gap:7px;align-items:center}
+  .card .link:hover{gap:11px}
+
+  /* stack */
+  .stack-groups{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+  .sg h4{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--wire);margin-bottom:16px;font-weight:600}
+  .sg .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .sg .chip{font-family:var(--mono);font-size:12px;color:var(--ink);border:1px solid var(--line);
+    background:rgba(255,255,255,.02);border-radius:7px;padding:6px 11px;letter-spacing:.01em}
+
+  /* contact */
+  .contact-wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
+  .contact-lead{font-family:var(--disp);font-weight:600;font-size:clamp(26px,3.6vw,40px);line-height:1.12;
+    letter-spacing:-.015em}
+  .contact-lead .u{color:var(--wire)}
+  .cinfo{font-family:var(--mono);font-size:14px}
+  .cinfo .row{display:flex;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line2);color:var(--muted)}
+  .cinfo .row span:last-child{color:var(--ink)}
+  .cinfo .row a:hover{color:var(--wire)}
+  .contact-actions{margin-top:24px;display:flex;gap:12px;flex-wrap:wrap}
+
+  footer{padding:30px 0 40px}
+  .foot-in{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+    font-family:var(--mono);font-size:12px;color:var(--dim)}
+  .foot-in .tld{color:var(--wire)}
+
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  @media(max-width:860px){
+    .hero-grid{grid-template-columns:1fr;gap:38px}
+    .viewport{max-width:400px}
+    .about-grid,.cards,.contact-wrap{grid-template-columns:1fr;gap:26px}
+    .stack-groups{grid-template-columns:1fr;gap:26px}
+    .nav-links{gap:16px}
+    .nav-links a:not(.cta){display:none}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .reveal{opacity:1;transform:none;transition:none}
+    .brand .dot{animation:none}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-in">
+    <div class="brand"><span class="dot"></span>nyxane<span class="tld">.dev</span></div>
+    <div class="nav-links">
+      <a href="#about">About</a>
+      <a href="#work">Work</a>
+      <a href="#stack">Stack</a>
+      <a href="#contact" class="cta">Get in touch</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <div class="eyebrow"><span class="slash">//</span> graphics · rendering · minecraft client</div>
+      <p class="thesis">I build renderers from scratch — and take apart <span class="u">other people's mods</span> to fix them.</p>
+      <p class="sub">Software developer working across real-time graphics (OpenGL / GLSL) and the JVM: low-level rendering, Minecraft modding, and chasing bugs down to their root cause.</p>
+      <div class="actions">
+        <a class="btn primary" href="#contact">Get in touch →</a>
+        <a class="btn ghost" href="#work">See the work</a>
+      </div>
+    </div>
+
+    <div class="viewport" id="vp">
+      <canvas id="wire"></canvas>
+      <span class="corner a"></span><span class="corner b"></span>
+      <span class="corner c"></span><span class="corner d"></span>
+      <div class="hud tl"><span class="k">viewport 01</span><br>wireframe</div>
+      <div class="hud tr">OpenGL · GLSL<br><span class="k">render pass</span></div>
+      <div class="hud bl"><span class="k">θ</span> <span id="theta">000.0°</span></div>
+      <div class="hud br">verts 12 · edges 30<br><span id="fps" class="k">-- fps</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="wrap">
+    <div class="sec-eyebrow"><span class="no">01</span> / about</div>
+    <div class="about-grid reveal">
+      <p class="lead">I like the parts of software most people would rather avoid.</p>
+      <div class="about-body">
+        <p>I like working close to the metal. Years back I wrote a basic real-time 3D rendering engine on <b>OpenGL</b> from the ground up — buffers, render state, transform math, hand-written GLSL shaders. The source is long gone now, but that's where I got comfortable with graphics at the level that matters.</p>
+        <p>Most recently I shipped Minecraft modpacks at <b>Feed The Beast</b>, where the real job wasn't writing new features so much as reading <b>other mods' source</b>, working out why they broke, and patching them so hundreds of interdependent mods could run together.</p>
+        <p>Crash logs, driver quirks, and code I didn't write but have to understand anyway — that's the work I reach for.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORK -->
+<section id="work">
+  <div class="wrap">
+    <div class="sec-eyebrow"><span class="no">02</span> / selected work</div>
+    <div class="cards">
+      <article class="card reveal">
+        <div class="idx">PROJECT · 01</div>
+        <h3>Custom OpenGL Rendering Engine</h3>
+        <div class="tag">Graphics · self-directed · earlier project</div>
+        <p>A basic real-time 3D renderer built from scratch on OpenGL: buffer and render-state management, the draw-submission path, the transform and projection math behind the scene, and hand-written GLSL shaders.</p>
+        <div class="stackline">OpenGL · GLSL · linear algebra · CPU→GPU boundary</div>
+        <div class="stackline" style="margin-top:8px;color:var(--dim)">// source no longer available</div>
+      </article>
+
+      <article class="card reveal">
+        <div class="idx">PROJECT · 02</div>
+        <h3>FTB Presents: Architect's Exodus</h3>
+        <div class="tag">Minecraft · FTB · 2025–26</div>
+        <p>Shipped with the FTB team: a Norse-mythology RPG modpack wiring together 350+ mods. My focus was compatibility and debugging — tracing crashes into other mods' source and patching them to keep the pack stable.</p>
+        <div class="stackline">Java · mod debugging · Mixins / mappings · KubeJS</div>
+        <a class="link" href="https://www.curseforge.com/minecraft/modpacks/ftb-presents-architects-exodus" target="_blank" rel="noopener">View on CurseForge →</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- STACK -->
+<section id="stack">
+  <div class="wrap">
+    <div class="sec-eyebrow"><span class="no">03</span> / stack</div>
+    <div class="stack-groups reveal">
+      <div class="sg">
+        <h4>Graphics</h4>
+        <div class="chips">
+          <span class="chip">OpenGL</span><span class="chip">GLSL</span>
+          <span class="chip">Real-time rendering</span><span class="chip">Transforms / projection</span>
+          <span class="chip">GPU debugging</span>
+        </div>
+      </div>
+      <div class="sg">
+        <h4>JVM &amp; Modding</h4>
+        <div class="chips">
+          <span class="chip">Java</span><span class="chip">Minecraft modding</span>
+          <span class="chip">Forge / Fabric</span><span class="chip">Mixins &amp; mappings</span>
+          <span class="chip">KubeJS</span>
+        </div>
+      </div>
+      <div class="sg">
+        <h4>Tools</h4>
+        <div class="chips">
+          <span class="chip">Git</span><span class="chip">Gradle</span>
+          <span class="chip">Crash-log analysis</span><span class="chip">Root-cause debugging</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="wrap">
+    <div class="sec-eyebrow"><span class="no">04</span> / contact</div>
+    <div class="contact-wrap reveal">
+      <div>
+        <div class="contact-actions">
+          <a class="btn primary" href="mailto:work@nyxane.dev">Email me →</a>
+          <a class="btn ghost" href="mailto:work@nyxane.dev?subject=Résumé%20request">Request résumé</a>
+        </div>
+      </div>
+      <div class="cinfo">
+        <div class="row"><span>email</span><a href="mailto:work@nyxane.dev">work@nyxane.dev</a></div>
+        <div class="row"><span>phone</span><span>+1 403 830 6582</span></div>
+        <div class="row"><span>based in</span><span>Canada</span></div>
+        <div class="row"><span>work</span><span>remote-friendly</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-in">
+    <div>nyxane<span class="tld">.dev</span></div>
+    <div>built by hand · no template · © 2026</div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var canvas=document.getElementById('wire'), ctx=canvas.getContext('2d');
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // icosahedron vertices
+  var g=(1+Math.sqrt(5))/2;
+  var V=[[-1,g,0],[1,g,0],[-1,-g,0],[1,-g,0],[0,-1,g],[0,1,g],
+         [0,-1,-g],[0,1,-g],[g,0,-1],[g,0,1],[-g,0,-1],[-g,0,1]];
+  // normalize
+  var r=Math.sqrt(1+g*g);
+  V=V.map(function(p){return [p[0]/r,p[1]/r,p[2]/r];});
+  // edges by distance (edge length^2 == 4/r^2)
+  var E=[], eps=0.02, target=4/(r*r);
+  for(var i=0;i<12;i++)for(var j=i+1;j<12;j++){
+    var dx=V[i][0]-V[j][0],dy=V[i][1]-V[j][1],dz=V[i][2]-V[j][2];
+    if(Math.abs(dx*dx+dy*dy+dz*dz-target)<eps)E.push([i,j]);
+  }
+
+  var W=0,H=0,dpr=Math.min(window.devicePixelRatio||1,2);
+  function size(){
+    var b=canvas.getBoundingClientRect();
+    W=b.width;H=b.height;
+    canvas.width=W*dpr;canvas.height=H*dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener('resize',size);
+
+  var ry=0.6, rx=0.42;
+  function project(p){
+    // rotate Y then X
+    var cy=Math.cos(ry),sy=Math.sin(ry);
+    var x=p[0]*cy+p[2]*sy, z=-p[0]*sy+p[2]*cy, y=p[1];
+    var cx=Math.cos(rx),sx=Math.sin(rx);
+    var y2=y*cx-z*sx, z2=y*sx+z*cx;
+    var f=3.4, s=f/(f-z2);
+    var R=Math.min(W,H)*0.30;
+    return {x:W/2+x*R*s, y:H/2+y2*R*s, z:z2, s:s};
+  }
+
+  var last=performance.now(), acc=0, frames=0, fpsEl=document.getElementById('fps'), thetaEl=document.getElementById('theta');
+  function draw(now){
+    var dt=now-last; last=now;
+    if(!reduce){ ry+=0.006; }
+    ctx.clearRect(0,0,W,H);
+
+    var pts=V.map(project);
+    // edges, depth sorted so nearer draw brighter/on top
+    var edges=E.map(function(e){
+      var a=pts[e[0]],b=pts[e[1]];
+      return {a:a,b:b,z:(a.z+b.z)/2};
+    }).sort(function(m,n){return m.z-n.z;});
+
+    edges.forEach(function(ed){
+      var t=(ed.z+1)/2;                // 0 far .. 1 near
+      var alpha=0.16+t*0.72;
+      ctx.strokeStyle='rgba(121,214,194,'+alpha.toFixed(3)+')';
+      ctx.lineWidth=0.6+t*1.1;
+      ctx.beginPath();
+      ctx.moveTo(ed.a.x,ed.a.y);
+      ctx.lineTo(ed.b.x,ed.b.y);
+      ctx.stroke();
+    });
+
+    // vertices
+    pts.forEach(function(p){
+      var t=(p.z+1)/2, rad=1.1+t*2.0;
+      ctx.beginPath();
+      ctx.fillStyle='rgba(229,164,79,'+(0.35+t*0.55).toFixed(3)+')';
+      ctx.arc(p.x,p.y,rad,0,Math.PI*2);
+      ctx.fill();
+    });
+
+    // HUD readouts
+    if(thetaEl){
+      var deg=((ry*180/Math.PI)%360+360)%360;
+      thetaEl.textContent=deg.toFixed(1).padStart(5,'0')+'°';
+    }
+    acc+=dt;frames++;
+    if(acc>=500 && fpsEl){ fpsEl.textContent=Math.round(1000/(acc/frames))+' fps'; acc=0;frames=0; }
+
+    if(!reduce) requestAnimationFrame(draw);
+  }
+
+  size();
+  if(reduce){ requestAnimationFrame(draw); }   // single frame
+  else requestAnimationFrame(draw);
+
+  // scroll reveal
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){ if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target);} });
+  },{threshold:0.14});
+  document.querySelectorAll('.reveal').forEach(function(el){io.observe(el);});
+})();
+</script>
+</body>
+</html>
